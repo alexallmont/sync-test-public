@@ -1,0 +1,50 @@
+name: Sync
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  private-to-public:
+    if: github.repository == 'alexallmont/sync-test-private'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout private repo
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Mirror main to public repo
+        run: |
+          remote_repo="https://alexallmont:${{ secrets.DEPLOY_ACCESS_TOKEN }}@github.com/alexallmont/sync-test-public.git"
+          git fetch "${remote_repo}" main
+          if ! git diff --quiet HEAD FETCH_HEAD; then
+            git push "${remote_repo}" HEAD:main --follow-tags --force
+            echo "Changes detected and pushed to public repo."
+          else
+            echo "No changes detected. No push needed."
+          fi
+
+  public-to-private:
+    if: github.repository == 'alexallmont/sync-test-public'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout public repo
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Mirror main to private repo
+        run: |
+          remote_repo="https://alexallmont:${{ secrets.DEPLOY_ACCESS_TOKEN }}@github.com/alexallmont/sync-test-private.git"
+          git fetch "${remote_repo}" main
+          if ! git diff --quiet HEAD FETCH_HEAD; then
+            git push "${remote_repo}" HEAD:main --follow-tags --force
+            echo "Changes detected and pushed to private repo."
+          else
+            echo "No changes detected. No push needed."
+          fi
+
