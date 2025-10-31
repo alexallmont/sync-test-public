@@ -1,3 +1,4 @@
+foo public change
 Temp file to edit to trigger file changes on CI
 
 this private change should now appear automatically in public sync repo
